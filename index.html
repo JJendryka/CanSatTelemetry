@@ -2,21 +2,85 @@
 <html>
 
 <head>
-    <title>WebSocket demo</title>
+    <title>CanSat Telemetry</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 
 <body>
+    <div id="temp1" style="width:600px;height:250px;"></div>
+    <div id="lon" style="width:600px;height:250px;"></div>
     <script>
-        var ws = new WebSocket("ws://127.0.0.1:25565/"),
-            messages = document.createElement('ul');
+        temp1 = document.getElementById('temp1');
+        Plotly.plot(temp1, [{ x: [], y: [] }])
+        lon = document.getElementById('lon');
+        Plotly.plot(lon, [{ x: [], y: [] }])
+
+        vars = {
+            "TEMP": {
+                "timestamp": [],
+                "temp1": [],
+                "temp2": [],
+                "temp3": [],
+                "temp4": [],
+                "pressure": [],
+                "vbat": [],
+                "humid": []
+            },
+            "GPS": {
+                "timestamp": [],
+                "hdop": [],
+                "hour": [],
+                "minute": [],
+                "second": [],
+                "lat": [],
+                "lon": [],
+                "height": [],
+            },
+            "AIR": {
+                "timestamp": [],
+                "millis": [],
+                "deviation": [],
+                "range": [],
+            },
+            "ACC": {
+                "timestamp": [],
+                "accx": [],
+                "accy": [],
+                "accz": [],
+                "gyrx": [],
+                "gyry": [],
+                "gyrz": [],
+            },
+            "RSSI": {
+                "timestamp": [],
+                "rssi": [],
+            }
+        }
+
+        var ws = new WebSocket("ws://127.0.0.1:25565/")
         ws.onmessage = function (event) {
-            var messages = document.getElementsByTagName('ul')[0],
-                message = document.createElement('li'),
-                content = document.createTextNode(event.data);
-            message.appendChild(content);
-            messages.appendChild(message);
-        };
-        document.body.appendChild(messages);
+            packet = JSON.parse(event.data)
+            if (packet["type"] in vars) {
+                Object.keys(vars[packet["type"]]).forEach(function (k) {
+                    vars[packet["type"]][k].push(packet[k])
+                    if (!(document.getElementById(k) == null)) {
+                        Plotly.extendTraces(document.getElementById(k), { x: [[packet["timestamp"]]], y: [[packet[k]]] }, [0])
+                    }
+                })
+            }
+        }
+
+
+        // var ws = new WebSocket("ws://127.0.0.1:25565/"),
+        //     messages = document.createElement('ul');
+        // ws.onmessage = function (event) {
+        //     var messages = document.getElementsByTagName('ul')[0],
+        //         message = document.createElement('li'),
+        //         content = document.createTextNode(event.data);
+        //     message.appendChild(content);
+        //     messages.appendChild(message);
+        // };
+        // document.body.appendChild(messages);
     </script>
 </body>
 
