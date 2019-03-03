@@ -75,12 +75,12 @@ class TemperaturePack(Pack):
         self.parse(data)
 
     def parse(self, data):
-        raw_temp1, raw_temp2, self.temp3, self.temp4, raw_pressure, self.timestamp, raw_vbat, self.humid, self.checksum = struct.unpack(
-            'xxhhhhhIhBB', bytearray(data))
+        raw_temp1, self.timestamp, raw_temp2,  self.temp3, self.temp4, raw_pressure,  raw_vbat, self.humid, self.checksum = struct.unpack(
+            'xxhIhhhhhBB', bytearray(data))
         self.pressure = self.convert_pressure(raw_pressure)
         self.temp1 = self.convertNTC(raw_temp1, **self.calibrationNTC)
         self.temp2 = self.convertNTC(raw_temp2, **self.calibrationNTC)
-        self.vbat = self.convertVBAT(raw_vbat, **self.calibrationVBAT)
+        self.vbat = self.convert_vbat(raw_vbat, **self.calibrationVBAT)
 
     def convert_pressure(self, pressureRaw):
         return (pressureRaw / 100.0) + 750.0
@@ -118,11 +118,14 @@ class GPSPack(Pack):
         return rawHDOP / 10.0
 
     def convertGPStime(self, rawGPStime):
-        text = str(rawGPStime)
-        hour = int(text[:2])
-        minute = int(text[2:4])
-        second = int(text[4:6])
-        return [hour, minute, second]
+        try:
+            text = str(rawGPStime)
+            hour = int(text[:2])
+            minute = int(text[2:4])
+            second = int(text[4:6])
+            return [hour, minute, second]
+        except ValueError:
+            return [0, 0, 0]
 
         
 
