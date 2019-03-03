@@ -33,7 +33,6 @@ class Parser(Thread):
                         try:
                             packet = constructor(
                                 list(self.data_queue.queue)[:length])
-                            print("Packet found: ", packet.__class__.__name__)
                             self.packet_queue.put(packet)
                             self.broadcast(json.dumps(packet.__dict__))
                         except ChecksumException:

@@ -14,7 +14,8 @@ def start():
     http_thread = httpserver.HTTPServer(packet_queue)
     http_thread.start()
     server_thread.start()
-    connect_device('/dev/ttyACM0', 9600, packet_queue, server_thread.broadcast)
+    connect_device('/dev/ttyACM0', 115200, packet_queue,
+                   server_thread.broadcast)
 
     while threading.active_count() > 0:
         pass
