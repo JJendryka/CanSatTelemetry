@@ -4,8 +4,9 @@ import queue
 import struct
 import crc8
 import json
+import math
 
-START = 1
+START = 0x01
 
 
 class ChecksumException(Exception):
@@ -67,27 +68,63 @@ class TemperaturePack(Pack):
         self.vbat = None
         self.humid = None
         self.checksum = None
+
+        self.calibrationNTC = {'R_0':33000, 'T_0':298.15, 'R_1': 33000, 'B':5000, 'resolution':12}
+        self.calibrationVBAT = {'multiplier':0.5, 'refrence':2.50}
+
         self.parse(data)
 
     def parse(self, data):
-        self.temp1, self.temp2, self.temp3, self.temp4, self.pressure, self.timestamp, self.vbat, self.humid, self.checksum = struct.unpack(
+        raw_temp1, raw_temp2, self.temp3, self.temp4, raw_pressure, self.timestamp, raw_vbat, self.humid, self.checksum = struct.unpack(
             'xxhhhhhIhBB', bytearray(data))
+        self.pressure = self.convert_pressure(raw_pressure)
+        self.temp1 = self.convertNTC(raw_temp1, **self.calibrationNTC)
+        self.temp2 = self.convertNTC(raw_temp2, **self.calibrationNTC)
+        self.vbat = self.convertVBAT(raw_vbat, **self.calibrationVBAT)
+
+    def convert_pressure(self, pressureRaw):
+        return (pressureRaw / 100.0) + 750.0
+
+    def convertNTC(self, temperature_raw, R_1, resolution, T_0, B, R_0):
+        R = R_1 * ((2**resolution) / temperature_raw - 1)
+        T = 1/(1/T_0 + 1/B * math.log(R/R_0))
+        return T - 273.18
+
+    def convert_vbat(self, vbat_raw, multiplier, reference):
+        return vbat_raw * multiplier * reference
+
 
 
 class GPSPack(Pack):
     def __init__(self, data):
         Pack.__init__(self)
-        self.type = "GSP"
+        self.type = "GPS"
         self.hdop = None
-        self.gpstime = None
+        self.hour = None
+        self.minute = None
+        self.seconds = None
         self.lat = None
         self.lon = None
         self.height = None
         self.parse(data)
 
     def parse(self, data):
-        self.hdop, self.timestamp, self.gpstime, self.lat, self.lon, self.height, self.checksum = struct.unpack(
+        rawHDOP, self.timestamp, rawGPStime, self.lat, self.lon, self.height, self.checksum = struct.unpack(
             "xxBxIIfffB", bytearray(data))
+        self.hdop = self.convertHDOP(rawHDOP)
+        self.hour, self.minute, self.second = self.convertGPStime(rawGPStime)
+
+    def convertHDOP(self, rawHDOP):
+        return rawHDOP / 10.0
+
+    def convertGPStime(self, rawGPStime):
+        text = str(rawGPStime)
+        hour = int(text[:2])
+        minute = int(text[2:4])
+        second = int(text[4:6])
+        return [hour, minute, second]
+
+        
 
 
 class AirPack(Pack):
