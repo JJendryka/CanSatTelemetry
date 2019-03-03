@@ -69,8 +69,9 @@ class TemperaturePack(Pack):
         self.humid = None
         self.checksum = None
 
-        self.calibrationNTC = {'R_0':33000, 'T_0':298.15, 'R_1': 33000, 'B':5000, 'resolution':12}
-        self.calibrationVBAT = {'multiplier':0.5, 'refrence':2.50}
+        self.calibrationNTC = {'R_0': 33000, 'T_0': 298.15,
+                               'R_1': 33000, 'B': 5000, 'resolution': 12}
+        self.calibrationVBAT = {'multiplier': 0.5, 'reference': 2.50}
 
         self.parse(data)
 
@@ -92,7 +93,6 @@ class TemperaturePack(Pack):
 
     def convert_vbat(self, vbat_raw, multiplier, reference):
         return vbat_raw * multiplier * reference
-
 
 
 class GPSPack(Pack):
@@ -126,8 +126,6 @@ class GPSPack(Pack):
             return [hour, minute, second]
         except ValueError:
             return [0, 0, 0]
-
-        
 
 
 class AirPack(Pack):
