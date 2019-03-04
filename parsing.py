@@ -39,6 +39,8 @@ class Parser(Thread):
                             print("Checksum failed")
                         except ZeroDivisionError:
                             print("Division by zero")
+                        except ValueError:
+                            print("Value error")
                 self.data_queue.get()
 
 
