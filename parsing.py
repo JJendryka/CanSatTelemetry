@@ -34,7 +34,6 @@ class Parser(Thread):
                         try:
                             packet = constructor(
                                 list(self.data_queue.queue)[:length])
-                            print("Packet found: ", packet.__class__.__name__)
                             self.packet_queue.put(packet)
                             self.broadcast(json.dumps(packet.__dict__))
                             if self.relay_queue is not None and packet.type == "GPS":
@@ -42,6 +41,10 @@ class Parser(Thread):
                                     (json.dumps(packet.__dict__)+"\n").encode("ASCII"))
                         except ChecksumException:
                             print("Checksum failed")
+                        except ZeroDivisionError:
+                            print("Division by zero")
+                        except ValueError:
+                            print("Value error")
                 self.data_queue.get()
 
 
@@ -106,7 +109,7 @@ class GPSPack(Pack):
         self.hdop = None
         self.hour = None
         self.minute = None
-        self.seconds = None
+        self.second = None
         self.lat = None
         self.lon = None
         self.height = None

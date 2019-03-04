@@ -31,7 +31,6 @@ class Server(Thread):
     async def send_to_all(self, message):
         to_remove = set()
         for client in self.connected:
-            print("Sending")
             try:
                 await client.send(message)
             except websockets.exceptions.ConnectionClosed:
