@@ -16,11 +16,12 @@ class ChecksumException(Exception):
 
 
 class Parser(Thread):
-    def __init__(self, data_queue, packet_queue, broadcast):
+    def __init__(self, data_queue, packet_queue, broadcast, relay_queue=None):
         Thread.__init__(self)
         self.data_queue = data_queue
         self.packet_queue = packet_queue
         self.broadcast = broadcast
+        self.relay_queue = relay_queue
 
     def run(self):
         while True:
@@ -36,6 +37,9 @@ class Parser(Thread):
                             print("Packet found: ", packet.__class__.__name__)
                             self.packet_queue.put(packet)
                             self.broadcast(json.dumps(packet.__dict__))
+                            if self.relay_queue is not None and packet.type == "GPS":
+                                self.relay_queue.put(
+                                    (json.dumps(packet.__dict__)+"\n").encode("ASCII"))
                         except ChecksumException:
                             print("Checksum failed")
                 self.data_queue.get()
